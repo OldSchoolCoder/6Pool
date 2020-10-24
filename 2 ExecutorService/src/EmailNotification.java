@@ -1,20 +1,21 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class EmailNotification {
-    ExecutorService pool = Executors.newFixedThreadPool(
+    private ExecutorService pool = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors()
     );
-    private String subject;
-    private String body;
-    private String email;
 
     public void emailTo(final User user) {
+        AtomicReference<String> subject = new AtomicReference<>();
+        AtomicReference<String> body = new AtomicReference<>();
+        AtomicReference<String> email = new AtomicReference<>();
         pool.submit(() -> {
-            subject = "Notification " + user.getUsername() + " to email " + user.getEmail();
-            body = "Add a new event to " + user.getUsername();
-            email = user.getEmail();
-            send(subject, body, email);
+            subject.set("Notification " + user.getUsername() + " to email " + user.getEmail());
+            body.set("Add a new event to " + user.getUsername());
+            email.set(user.getEmail());
+            send(subject.get(), body.get(), email.get());
         });
     }
 
