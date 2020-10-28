@@ -1,29 +1,32 @@
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+
 
 public class ThreadPool {
-    private final ExecutorService pool = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors()
-    );
+    private final int size = Runtime.getRuntime().availableProcessors();
     private final List<Thread> threads = new LinkedList<>();
     private final SimpleBlockingQueue<Runnable> tasks = new SimpleBlockingQueue<>();
+
+    public void init() {
+        for (int i = 0; i < size; i++) {
+            try {
+                threads.add(new Thread(tasks.poll()));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            threads.get(i).start();
+        }
+    }
 
     public void work(Runnable job) {
         tasks.offer(job);
     }
 
     public void shutdown() {
-        pool.shutdown();
-        while (!pool.isTerminated()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        for (int i = 0; i < threads.size(); i++) {
+            threads.get(i).interrupt();
         }
     }
 }
+
